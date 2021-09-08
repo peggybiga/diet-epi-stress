@@ -1,3 +1,16 @@
+# Table of Contents
+- [CyVerse](#cyverse)
+- [Salmon](#salmon)
+- [STAR](#star)
+- [GO Expression Analysis](#go-expression-analysis)
+---  
+# CyVerse
+- [Table of Contents](#table-of-contents)
+- [Salmon](#salmon)
+- [STAR](#star)
+- [GO Expression Analysis](#go-expression-analysis)
+
+# HISAT2-StringTie-Ballgown Workflow via CyVerse
 ## Getting Started
 **Purpose:** This section is to get the appropriate files ready for RNASeq analysis via Cyverse and the programs it provides.
 1. Upload genome file with appropriate name (ex. rainbow trout genome name is [USDA_OmykA_1.1.fa.tar.gz](https://www.ncbi.nlm.nih.gov/assembly/GCF_013265735.2/)).
@@ -178,14 +191,13 @@ head(transcript_gene_table)
 length(row.names(transcript_gene_table)) #Transcript count
 length(unique(transcript_gene_table[,"g_id"])) #Unique Gene count
 ```
-### Graphical Analyses
-```
-Plot #1 - The Number of Transcripts per Gene.
-
+### Graphical Analyses<br>
+Plot #1 - The Number of Transcripts per Gene.<br>
+<br>
 Many genes will have only 1 transcript, some genes will have several transcripts. Use the ‘table()’ command to count the number of times 
 each gene symbol occurs (i.e., the number of transcripts that have each gene symbol) Then use the ‘hist’ command to create a 
 histogram of these counts How many genes have 1 transcript? More than one transcript? What is the maximum number of transcripts for a single gene?
-
+```
 counts=table(transcript_gene_table[,"g_id"])
 c_one = length(which(counts == 1))
 c_more_than_one = length(which(counts > 1))
@@ -193,17 +205,19 @@ c_max = max(counts)
 hist(counts, breaks=50, col="bisque4", xlab="Transcripts per gene", main="Distribution of transcript count per gene")
 legend_text = c(paste("Genes with one transcript =", c_one), paste("Genes with more than one transcript =", c_more_than_one), paste("Max transcripts for single gene = ", c_max))
 legend("topright", legend_text, lty=NULL)
-
-Plot #2 - the distribution of transcript sizes as a histogram. 
-
+```
+Plot #2 - the distribution of transcript sizes as a histogram.<br> 
+<br>
 In this analysis we supplied StringTie with transcript models so the lengths will be those of known transcripts.
 However, if we had used a *de novo* transcript discovery mode, this step would give us some idea of how well transcripts were being assembled.
 If we had a low coverage library, or other problems, we might get short ‘transcripts’ that are actually only pieces of real transcripts
+```
 full_table <- texpr(bg , 'all').
 
 hist(full_table$length, breaks=50, xlab="Transcript length (bp)", main="Distribution of transcript lengths", col="steelblue")
-
-#Summarize FPKM values for all samples What are the minimum and maximum FPKM values for a particular library?
+```
+Summarize FPKM values for all samples. What are the minimum and maximum FPKM values for a particular library?
+```
 min(gene_expression[,"IS20351_DS_1_1"])
 ## [1] 0
 max(gene_expression[,"IS20351_DS_2_1"])
@@ -216,31 +230,29 @@ min(gene_expression[,"IS20351_WW_2_1"])
 ## [1] 0
 max(gene_expression[,"IS20351_WW_3_1"])
 ## [1] 30315.73
-
-Plot #3 - View the range of values and general distribution of FPKM values for all libraries Create boxplots for this purpose Display on a log2 scale and add the minimum non-zero value to avoid log2(0).
-
-boxplot(log2(gene_expression[,data_columns]+min_nonzero), col=data_colors, names=short_names, las=2, ylab="log2(FPKM)", main="Distribution of FPKMs for all 6 libraries")
+```
+Plot #3 - View the range of values and general distribution of FPKM values for all libraries Create boxplots for this purpose Display on a log2 scale and add the minimum non-zero value to avoid log2(0).<br>
 **Note:** that the bold horizontal line on each boxplot is the median
-
-Plot #4 - plot a pair of replicates to assess reproducibility of technical replicates.
-Tranform the data by converting to log2 scale after adding an arbitrary small value to avoid log2(0).
-
+```
+boxplot(log2(gene_expression[,data_columns]+min_nonzero), col=data_colors, names=short_names, las=2, ylab="log2(FPKM)", main="Distribution of FPKMs for all 6 libraries")
+```
+Plot #4 - plot a pair of replicates to assess reproducibility of technical replicates. Transform the data by converting to log2 scale after adding an arbitrary small value to avoid log2(0).
+```
 x = gene_expression[,"IS20351_DS_1_1"]
 y = gene_expression[,"IS20351_DS_2_1"]
 plot(x=log2(x+min_nonzero), y=log2(y+min_nonzero), pch=16, col="blue", cex=0.25, xlab="FPKM (IS20351_DS, Replicate 1)", ylab="FPKM (IS20351_DS, Replicate 2)", main="Comparison of expression values for a pair of replicates")
 abline(a=0,b=1)
 rs=cor(x,y)^2
 legend("topleft", paste("R squared = ", round(rs, digits=3), sep=""), lwd=1, col="black")
-
-
+```
 Plot #5 - Scatter plots with a large number of data points can be misleading … regenerate this figure as a density scatter plot.
+```
 colors = colorRampPalette(c("white", "blue", "#007FFF", "cyan","#7FFF7F", "yellow", "#FF7F00", "red", "#7F0000"))
 smoothScatter(x=log2(x+min_nonzero), y=log2(y+min_nonzero), xlab="FPKM (IS20351_DS, Replicate 1)", ylab="FPKM (IS20351_DS, Replicate 2)", main="Comparison of expression values for a pair of replicates", colramp=colors, nbin=200)
-
-
+```
 Compare the correlation ‘distance’ between all replicates Do we see the expected pattern for all libraries (i.e. replicates most similar, then DS vs. WW)? 
-Calculate the FPKM sum for all 6 libraries.
-
+Calculate the FPKM sum for all libraries.
+```
 gene_expression[,"sum"]=apply(gene_expression[,data_columns], 1, sum)
 Identify the genes with a grand sum FPKM of at least 5 - we will filter out the genes with very low expression across the board
 i = which(gene_expression[,"sum"] > 5)
@@ -261,34 +273,34 @@ r
 ## IS20351_WW_1_1      0.8317814      0.8210495
 ## IS20351_WW_2_1      1.0000000      0.9825595
 ## IS20351_WW_3_1      0.9825595      1.0000000
-
+```
 Plot #8 - Convert correlation to ‘distance’, and use ‘multi-dimensional scaling’ to display the relative differences between libraries.
 This step calculates 2-dimensional coordinates to plot points for each library Libraries with similar expression patterns (highly correlated to each other) 
 should group together. What pattern do we expect to see, given the types of libraries we have (technical replicates, biologal replicates, DS/WW)?
-
+```
 d=1-r
 mds=cmdscale(d, k=2, eig=TRUE)
 par(mfrow=c(1,1))
 plot(mds$points, type="n", xlab="", ylab="", main="MDS distance plot (all non-zero genes) for all libraries", xlim=c(-0.15,0.15), ylim=c(-0.15,0.15))
 points(mds$points[,1], mds$points[,2], col="grey", cex=2, pch=16)
 text(mds$points[,1], mds$points[,2], short_names, col=data_colors)
-
-
-#Calculate the differential expression results including significance
+```
+Calculate the differential expression results including significance
+```
 results_genes = stattest(bg_filt, feature="gene", covariate="group", getFC=TRUE, meas="FPKM")
 results_genes = merge(results_genes,bg_gene_names,by.x=c("id"),by.y=c("gene_id"))
-
+```
 Plot #9 - View the distribution of differential expression values as a histogram Display only those that are significant according to Ballgown.
-
+```
 sig=which(results_genes$pval<0.05)
 results_genes[,"de"] = log2(results_genes[,"fc"])
 hist(results_genes[sig,"de"], breaks=50, col="seagreen", xlab="log2(Fold change) Sen_DS vs Sen_WW", main="Distribution of differential expression values")
 abline(v=-2, col="black", lwd=2, lty=2)
 abline(v=2, col="black", lwd=2, lty=2)
 legend("topleft", "Fold-change > 4", lwd=2, lty=2)
-
+```
 Plot #10 - Display the grand expression values from UHR and HBR and mark those that are significantly differentially expressed.
-
+```
 gene_expression[,"Sen_DS"]=apply(gene_expression[,c(1:3)], 1, mean)
 gene_expression[,"Sen_WW"]=apply(gene_expression[,c(3:6)], 1, mean)
 x=log2(gene_expression[,"Sen_DS"]+min_nonzero)
@@ -299,9 +311,9 @@ xsig=x[sig]
 ysig=y[sig]
 points(x=xsig, y=ysig, col="magenta", pch=16, cex=0.5)
 legend("topleft", "Significant", col="magenta", pch=16)
-
-#Write a simple table of differentially expressed transcripts to an output file Each should be significant with a log2 fold-change >= 2
-
+```
+Write a simple table of differentially expressed transcripts to an output file Each should be significant with a log2 fold-change >= 2
+```
 sigpi = which(results_genes[,"pval"]<0.05)
 sigp = results_genes[sigpi,]
 sigde = which(abs(sigp[,"de"]) >= 2)
@@ -310,9 +322,16 @@ Order the output by or p-value and then break ties using fold-change
 o = order(sig_tn_de[,"qval"], -abs(sig_tn_de[,"de"]), decreasing=FALSE)
 output = sig_tn_de[o,c("gene_name","id","fc","pval","qval","de")]
 write.table(output, file="SigDE.txt", sep="\t", row.names=FALSE, quote=FALSE)
-
-#View selected columns of the first 25 lines of output
+csv <- read.table("SigDE.txt", header = TRUE, sep = "\t")
+csv
+```
+View selected columns of the first 25 lines of output
+```
 output[1:10,c(1,4,5)]
+```
+## Create a text file to intersect with a file containing the Ensembl IDs to obtain an annotated file if some annotations are missing. Skip this step if annotations are present in the previous step.
+```
+bedtools intersect -a SigDE.txt -b id_file.txt > newly_annotated_file.txt
 ```
 ---
 # SALMON
