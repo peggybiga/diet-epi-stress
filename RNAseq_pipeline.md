@@ -10,9 +10,9 @@
 2. Designate an output folder for the analysis.
 3. Select your input files (FASTQ files) under 'Read 1' and 'Read 2'.
 4. Select 'forward-reverse' for Fragment Library Type.
-5. File Type will be 'PE'.
+5. File Type will be 'PE' for paired end analysis.
 9. Click box to Report alignments tailored for transcript assemblers including StringTie.
-10. Click box to Report alignments tailored for Cufflinks.
+10. Click box to Report alignments tailored for Cufflinks if this is your assembly tool (leave unchecked if not).
 11. All other parameters should be set to default (i.e., do not input new values).
 12. Run the analysis and wait for results.
 
@@ -20,17 +20,18 @@ Input: read1 fastq directory, read2 fastq directory, & genome FASTA file<br>
 Output: bam_output directory
 
 ## Assemble transcripts via StringTie-1.3.3
-**Purpose:** 
+**Purpose:** This section will assemble your aligned reads into potential transcripts.
 1. Access StringTie-1.3.3 via Apps.
 2. Select bam_output directory in 'Select Input data' section.
 3. Select reference annotation file (*.gtf) in 'Reference Annotation' section.
-4. Run StringTie-1.3.3
+4. Select to output ballgown input files.
+5. Run StringTie-1.3.3
 
 Input: bam_output directory<br>
 Output: gtf_files directory, StringTie_output directory (assembled transcripts, tab-delimited format for gene abundance, transcripts that match the reference annotation), ballgown_input_files directory, and logs directory
 
 ## Merge all StringTie-1.3.3 transcripts into a single transcriptome annotation file using StringTie-1.3.3_merge
-**Purpose:** 
+**Purpose:** This section merges the files produced by StringTie, but this can be skipped by selecting the option to mimic '-B' in StringTie above.
 1. Access StringTie-1.3.3_merge via Apps.
 2. Input gtf_out and select GTF files as the input.
 3. Select reference annotation file as the above section.
@@ -78,8 +79,9 @@ Output: output directory
 3. Launch application (add to existing projects if already created).
 4. Select the size of the instance "tiny 2(CPU:1,Mem: 8, Disk: 60Gb)". Click on Launch instance. This will launch a instance of the image.
 5. Log into Atmosphere via puTTY or Terminal and use the provided IP address and password to access your account.
-6. Use the following code to create a directory to house Ballgown analysis files and download files created in above steps:
+6. Use the following code to create a directory to house Ballgown analysis files and download files created in above steps (skip to step 10 if analysis is happening on your local machine):
 ```
+# In Atmosphere:
 $ mkdir ballgown_analysis
 $ iget -PVr /path/to/ballgown_input_files
 $ iget -PV /path/to/design_matrix
@@ -96,7 +98,7 @@ $ sudo gdebi -n rstudio-server-1.0.136-amd64.deb
 $ echo My RStudio Web server is running at: http://$(hostname):8787/
 ```
 9. Copy and paste the link into the web browser and enter Cyverse credentials to launch RStudio.
-10. Start a new RScript.R and [paste the following commands for analysis](http://rpubs.com/upendra_35/466542):
+10. Start a new RScript.R and [paste the following commands for analysis](http://rpubs.com/upendra_35/466542) (some slight changes to wording were made by contributors of this page):
 ```
 #Set working directory
 setwd("/de-app-work/")
@@ -111,16 +113,18 @@ library(GenomicRanges)
 library(plyr)
 
 #Read in design matrix file
-pheno_data = read.table(file ="design_matrix", header = TRUE, sep = "\t")
+##Design matrix should house samples in first column, treatment in the second column, and replicate in the third column (optional) of a CSV file.
+##The 'dplyr' package has a 'filter' command which can be utilized to separate the CSV file into subsets comparing specific groups.
+pheno_data = read.table(file ="design_matrix.csv", header = TRUE, sep = "\t")
 
 #Create path to sample directory
-sample_full_path <- paste("ballgown_input_files",pheno_data[,1], sep = '/')
+sample_full_path <- paste("ballgown_input_files",pheno_data[,1], sep = ',')
 
 #Load in ballgown data structure
 bg = ballgown(samples=as.vector(sample_full_path),pData=pheno_data)
-
-#Describe your data (number of genes and samples)
-
+```
+### Describe your data (number of genes and samples)
+```
 #Filter out genes. Here, we remove all transcripts with a variance across the samples of less than one.
 bg_filt = subset(bg,"rowVars(texpr(bg)) >1",genomesubset=TRUE)
 
@@ -128,18 +132,35 @@ bg_filt = subset(bg,"rowVars(texpr(bg)) >1",genomesubset=TRUE)
 bg_table = texpr(bg_filt, 'all')
 bg_gene_names = unique(bg_table[, 9:10])
 
-#Pull gene_expression dataframe fro ballgown object.
+#Pull gene_expression dataframe for ballgown object.
 gene_expression = as.data.frame(gexpr(bg_filt))
 
 #View first five lines in each column of the created dataframe.
 head(gene_expression)
+```
+### Background setup for graphs later in the analysis
+```
+#It would be advisable to make a key to refer to the sample colors more easily. Example: 
+Key:
+1. Tomato - DS
+2. Wheat - WW
 
 #Change column names to sample names.
-colnames(gene_expression) <- c("IS20351_DS_1_1","IS20351_DS_2_1","IS20351_DS_3_1","IS20351_WW_1_1","IS20351_WW_2_1","IS20351_WW_3_1")
+colnames(gene_expression)=c("IS20351_DS_1_1","IS20351_DS_2_1","IS20351_DS_3_1","IS20351_WW_1_1","IS20351_WW_2_1","IS20351_WW_3_1")
 
 #Assign colors to each. You can specify color by RGB, Hex code, or name To get a list of color names:
 data_colors=c("tomato1","tomato2","tomato3","wheat1","wheat2","wheat3")
 
+#Set the columns for finding FPKM and create shorter names for figures
+data_columns=c(1:6)
+short_names=c("sen_DS_1","sen_DS_2","sen_DS_3","sen_WW_1","sen_WW_2","sen_WW_3")
+
+#Set the minimum non-zero FPKM values for use later. Do this by grabbing a copy of all data values, 
+coverting 0’s to NA, and calculating the minimum or all non NA values.
+min_nonzero=1
+```
+### Transcript to Gene Indeces
+```
 #View expression values for the transcripts of a particular gene e.g “MSTRG.27571”, then display only those rows of the data.frame
 i = row.names(gene_expression) == "MSTRG.27571"
 gene_expression[i,]
@@ -156,12 +177,14 @@ head(transcript_gene_table)
 #Each row of data represents a transcript. Many of these transcripts represent the same gene. Determine the numbers of transcripts and unique genes
 length(row.names(transcript_gene_table)) #Transcript count
 length(unique(transcript_gene_table[,"g_id"])) #Unique Gene count
+```
+### Graphical Analyses
+```
+Plot #1 - The Number of Transcripts per Gene.
 
-Plot #1 - the number of transcripts per gene.
-Many genes will have only 1 transcript, some genes will have several transcripts Use the ‘table()’ command to count the number of times 
-each gene symbol occurs (i.e. the # of transcripts that have each gene symbol) Then use the ‘hist’ command to create a 
-histogram of these counts How many genes have 1 transcript? More than one transcript? 
-What is the maximum number of transcripts for a single gene?
+Many genes will have only 1 transcript, some genes will have several transcripts. Use the ‘table()’ command to count the number of times 
+each gene symbol occurs (i.e., the number of transcripts that have each gene symbol) Then use the ‘hist’ command to create a 
+histogram of these counts How many genes have 1 transcript? More than one transcript? What is the maximum number of transcripts for a single gene?
 
 counts=table(transcript_gene_table[,"g_id"])
 c_one = length(which(counts == 1))
@@ -171,13 +194,14 @@ hist(counts, breaks=50, col="bisque4", xlab="Transcripts per gene", main="Distri
 legend_text = c(paste("Genes with one transcript =", c_one), paste("Genes with more than one transcript =", c_more_than_one), paste("Max transcripts for single gene = ", c_max))
 legend("topright", legend_text, lty=NULL)
 
-Plot #2 - the distribution of transcript sizes as a histogram In this analysis we supplied StringTie with transcript models so the lengths will be those of known transcripts.
-However, if we had used a de novo transcript discovery mode, this step would give us some idea of how well transcripts were being assembled.
+Plot #2 - the distribution of transcript sizes as a histogram. 
+
+In this analysis we supplied StringTie with transcript models so the lengths will be those of known transcripts.
+However, if we had used a *de novo* transcript discovery mode, this step would give us some idea of how well transcripts were being assembled.
 If we had a low coverage library, or other problems, we might get short ‘transcripts’ that are actually only pieces of real transcripts
 full_table <- texpr(bg , 'all').
 
 hist(full_table$length, breaks=50, xlab="Transcript length (bp)", main="Distribution of transcript lengths", col="steelblue")
-
 
 #Summarize FPKM values for all samples What are the minimum and maximum FPKM values for a particular library?
 min(gene_expression[,"IS20351_DS_1_1"])
@@ -192,14 +216,6 @@ min(gene_expression[,"IS20351_WW_2_1"])
 ## [1] 0
 max(gene_expression[,"IS20351_WW_3_1"])
 ## [1] 30315.73
-
-#Set the minimum non-zero FPKM values for use later. Do this by grabbing a copy of all data values, 
-coverting 0’s to NA, and calculating the minimum or all non NA values.
-min_nonzero=1
-
-#Set the columns for finding FPKM and create shorter names for figures
-data_columns=c(1:6)
-short_names=c("sen_DS_1","sen_DS_2","sen_DS_3","sen_WW_1","sen_WW_2","sen_WW_3")
 
 Plot #3 - View the range of values and general distribution of FPKM values for all libraries Create boxplots for this purpose Display on a log2 scale and add the minimum non-zero value to avoid log2(0).
 
