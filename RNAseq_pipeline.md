@@ -1,3 +1,16 @@
+# Table of Contents
+- [CyVerse](#cyverse)
+- [Salmon](#salmon)
+- [STAR](#star)
+- [GO Expression Analysis](#go-expression-analysis)
+---  
+# CyVerse
+- [Table of Contents](#table-of-contents)
+- [Salmon](#salmon)
+- [STAR](#star)
+- [GO Expression Analysis](#go-expression-analysis)
+
+# HISAT2-StringTie-Ballgown Workflow via CyVerse
 ## Getting Started
 **Purpose:** This section is to get the appropriate files ready for RNASeq analysis via Cyverse and the programs it provides.
 1. Upload genome file with appropriate name (ex. rainbow trout genome name is [USDA_OmykA_1.1.fa.tar.gz](https://www.ncbi.nlm.nih.gov/assembly/GCF_013265735.2/)).
@@ -10,9 +23,9 @@
 2. Designate an output folder for the analysis.
 3. Select your input files (FASTQ files) under 'Read 1' and 'Read 2'.
 4. Select 'forward-reverse' for Fragment Library Type.
-5. File Type will be 'PE'.
+5. File Type will be 'PE' for paired end analysis.
 9. Click box to Report alignments tailored for transcript assemblers including StringTie.
-10. Click box to Report alignments tailored for Cufflinks.
+10. Click box to Report alignments tailored for Cufflinks if this is your assembly tool (leave unchecked if not).
 11. All other parameters should be set to default (i.e., do not input new values).
 12. Run the analysis and wait for results.
 
@@ -20,17 +33,18 @@ Input: read1 fastq directory, read2 fastq directory, & genome FASTA file<br>
 Output: bam_output directory
 
 ## Assemble transcripts via StringTie-1.3.3
-**Purpose:** 
+**Purpose:** This section will assemble your aligned reads into potential transcripts.
 1. Access StringTie-1.3.3 via Apps.
 2. Select bam_output directory in 'Select Input data' section.
 3. Select reference annotation file (*.gtf) in 'Reference Annotation' section.
-4. Run StringTie-1.3.3
+4. Select to output ballgown input files.
+5. Run StringTie-1.3.3
 
 Input: bam_output directory<br>
 Output: gtf_files directory, StringTie_output directory (assembled transcripts, tab-delimited format for gene abundance, transcripts that match the reference annotation), ballgown_input_files directory, and logs directory
 
 ## Merge all StringTie-1.3.3 transcripts into a single transcriptome annotation file using StringTie-1.3.3_merge
-**Purpose:** 
+**Purpose:** This section merges the files produced by StringTie, but this can be skipped by selecting the option to mimic '-B' in StringTie above.
 1. Access StringTie-1.3.3_merge via Apps.
 2. Input gtf_out and select GTF files as the input.
 3. Select reference annotation file as the above section.
@@ -78,8 +92,9 @@ Output: output directory
 3. Launch application (add to existing projects if already created).
 4. Select the size of the instance "tiny 2(CPU:1,Mem: 8, Disk: 60Gb)". Click on Launch instance. This will launch a instance of the image.
 5. Log into Atmosphere via puTTY or Terminal and use the provided IP address and password to access your account.
-6. Use the following code to create a directory to house Ballgown analysis files and download files created in above steps:
+6. Use the following code to create a directory to house Ballgown analysis files and download files created in above steps (skip to step 10 if analysis is happening on your local machine):
 ```
+# In Atmosphere:
 $ mkdir ballgown_analysis
 $ iget -PVr /path/to/ballgown_input_files
 $ iget -PV /path/to/design_matrix
@@ -96,7 +111,7 @@ $ sudo gdebi -n rstudio-server-1.0.136-amd64.deb
 $ echo My RStudio Web server is running at: http://$(hostname):8787/
 ```
 9. Copy and paste the link into the web browser and enter Cyverse credentials to launch RStudio.
-10. Start a new RScript.R and [paste the following commands for analysis](http://rpubs.com/upendra_35/466542):
+10. Start a new RScript.R and [paste the following commands for analysis](http://rpubs.com/upendra_35/466542) (some slight changes to wording were made by contributors of this page):
 ```
 #Set working directory
 setwd("/de-app-work/")
@@ -111,16 +126,18 @@ library(GenomicRanges)
 library(plyr)
 
 #Read in design matrix file
-pheno_data = read.table(file ="design_matrix", header = TRUE, sep = "\t")
+##Design matrix should house samples in first column, treatment in the second column, and replicate in the third column (optional) of a CSV file.
+##The 'dplyr' package has a 'filter' command which can be utilized to separate the CSV file into subsets comparing specific groups.
+pheno_data = read.table(file ="design_matrix.csv", header = TRUE, sep = "\t")
 
 #Create path to sample directory
-sample_full_path <- paste("ballgown_input_files",pheno_data[,1], sep = '/')
+sample_full_path <- paste("ballgown_input_files",pheno_data[,1], sep = ',')
 
 #Load in ballgown data structure
 bg = ballgown(samples=as.vector(sample_full_path),pData=pheno_data)
-
-#Describe your data (number of genes and samples)
-
+```
+### Describe your data (number of genes and samples)
+```
 #Filter out genes. Here, we remove all transcripts with a variance across the samples of less than one.
 bg_filt = subset(bg,"rowVars(texpr(bg)) >1",genomesubset=TRUE)
 
@@ -128,18 +145,35 @@ bg_filt = subset(bg,"rowVars(texpr(bg)) >1",genomesubset=TRUE)
 bg_table = texpr(bg_filt, 'all')
 bg_gene_names = unique(bg_table[, 9:10])
 
-#Pull gene_expression dataframe fro ballgown object.
+#Pull gene_expression dataframe for ballgown object.
 gene_expression = as.data.frame(gexpr(bg_filt))
 
 #View first five lines in each column of the created dataframe.
 head(gene_expression)
+```
+### Background setup for graphs later in the analysis
+```
+#It would be advisable to make a key to refer to the sample colors more easily. Example: 
+Key:
+1. Tomato - DS
+2. Wheat - WW
 
 #Change column names to sample names.
-colnames(gene_expression) <- c("IS20351_DS_1_1","IS20351_DS_2_1","IS20351_DS_3_1","IS20351_WW_1_1","IS20351_WW_2_1","IS20351_WW_3_1")
+colnames(gene_expression)=c("IS20351_DS_1_1","IS20351_DS_2_1","IS20351_DS_3_1","IS20351_WW_1_1","IS20351_WW_2_1","IS20351_WW_3_1")
 
 #Assign colors to each. You can specify color by RGB, Hex code, or name To get a list of color names:
 data_colors=c("tomato1","tomato2","tomato3","wheat1","wheat2","wheat3")
 
+#Set the columns for finding FPKM and create shorter names for figures
+data_columns=c(1:6)
+short_names=c("sen_DS_1","sen_DS_2","sen_DS_3","sen_WW_1","sen_WW_2","sen_WW_3")
+
+#Set the minimum non-zero FPKM values for use later. Do this by grabbing a copy of all data values, 
+coverting 0’s to NA, and calculating the minimum or all non NA values.
+min_nonzero=1
+```
+### Transcript to Gene Indeces
+```
 #View expression values for the transcripts of a particular gene e.g “MSTRG.27571”, then display only those rows of the data.frame
 i = row.names(gene_expression) == "MSTRG.27571"
 gene_expression[i,]
@@ -156,13 +190,14 @@ head(transcript_gene_table)
 #Each row of data represents a transcript. Many of these transcripts represent the same gene. Determine the numbers of transcripts and unique genes
 length(row.names(transcript_gene_table)) #Transcript count
 length(unique(transcript_gene_table[,"g_id"])) #Unique Gene count
-
-Plot #1 - the number of transcripts per gene.
-Many genes will have only 1 transcript, some genes will have several transcripts Use the ‘table()’ command to count the number of times 
-each gene symbol occurs (i.e. the # of transcripts that have each gene symbol) Then use the ‘hist’ command to create a 
-histogram of these counts How many genes have 1 transcript? More than one transcript? 
-What is the maximum number of transcripts for a single gene?
-
+```
+### Graphical Analyses<br>
+Plot #1 - The Number of Transcripts per Gene.<br>
+<br>
+Many genes will have only 1 transcript, some genes will have several transcripts. Use the ‘table()’ command to count the number of times 
+each gene symbol occurs (i.e., the number of transcripts that have each gene symbol) Then use the ‘hist’ command to create a 
+histogram of these counts How many genes have 1 transcript? More than one transcript? What is the maximum number of transcripts for a single gene?
+```
 counts=table(transcript_gene_table[,"g_id"])
 c_one = length(which(counts == 1))
 c_more_than_one = length(which(counts > 1))
@@ -170,16 +205,19 @@ c_max = max(counts)
 hist(counts, breaks=50, col="bisque4", xlab="Transcripts per gene", main="Distribution of transcript count per gene")
 legend_text = c(paste("Genes with one transcript =", c_one), paste("Genes with more than one transcript =", c_more_than_one), paste("Max transcripts for single gene = ", c_max))
 legend("topright", legend_text, lty=NULL)
-
-Plot #2 - the distribution of transcript sizes as a histogram In this analysis we supplied StringTie with transcript models so the lengths will be those of known transcripts.
-However, if we had used a de novo transcript discovery mode, this step would give us some idea of how well transcripts were being assembled.
+```
+Plot #2 - the distribution of transcript sizes as a histogram.<br> 
+<br>
+In this analysis we supplied StringTie with transcript models so the lengths will be those of known transcripts.
+However, if we had used a *de novo* transcript discovery mode, this step would give us some idea of how well transcripts were being assembled.
 If we had a low coverage library, or other problems, we might get short ‘transcripts’ that are actually only pieces of real transcripts
+```
 full_table <- texpr(bg , 'all').
 
 hist(full_table$length, breaks=50, xlab="Transcript length (bp)", main="Distribution of transcript lengths", col="steelblue")
-
-
-#Summarize FPKM values for all samples What are the minimum and maximum FPKM values for a particular library?
+```
+Summarize FPKM values for all samples. What are the minimum and maximum FPKM values for a particular library?
+```
 min(gene_expression[,"IS20351_DS_1_1"])
 ## [1] 0
 max(gene_expression[,"IS20351_DS_2_1"])
@@ -192,39 +230,29 @@ min(gene_expression[,"IS20351_WW_2_1"])
 ## [1] 0
 max(gene_expression[,"IS20351_WW_3_1"])
 ## [1] 30315.73
-
-#Set the minimum non-zero FPKM values for use later. Do this by grabbing a copy of all data values, 
-coverting 0’s to NA, and calculating the minimum or all non NA values.
-min_nonzero=1
-
-#Set the columns for finding FPKM and create shorter names for figures
-data_columns=c(1:6)
-short_names=c("sen_DS_1","sen_DS_2","sen_DS_3","sen_WW_1","sen_WW_2","sen_WW_3")
-
-Plot #3 - View the range of values and general distribution of FPKM values for all libraries Create boxplots for this purpose Display on a log2 scale and add the minimum non-zero value to avoid log2(0).
-
-boxplot(log2(gene_expression[,data_columns]+min_nonzero), col=data_colors, names=short_names, las=2, ylab="log2(FPKM)", main="Distribution of FPKMs for all 6 libraries")
+```
+Plot #3 - View the range of values and general distribution of FPKM values for all libraries Create boxplots for this purpose Display on a log2 scale and add the minimum non-zero value to avoid log2(0).<br>
 **Note:** that the bold horizontal line on each boxplot is the median
-
-Plot #4 - plot a pair of replicates to assess reproducibility of technical replicates.
-Tranform the data by converting to log2 scale after adding an arbitrary small value to avoid log2(0).
-
+```
+boxplot(log2(gene_expression[,data_columns]+min_nonzero), col=data_colors, names=short_names, las=2, ylab="log2(FPKM)", main="Distribution of FPKMs for all 6 libraries")
+```
+Plot #4 - plot a pair of replicates to assess reproducibility of technical replicates. Transform the data by converting to log2 scale after adding an arbitrary small value to avoid log2(0).
+```
 x = gene_expression[,"IS20351_DS_1_1"]
 y = gene_expression[,"IS20351_DS_2_1"]
 plot(x=log2(x+min_nonzero), y=log2(y+min_nonzero), pch=16, col="blue", cex=0.25, xlab="FPKM (IS20351_DS, Replicate 1)", ylab="FPKM (IS20351_DS, Replicate 2)", main="Comparison of expression values for a pair of replicates")
 abline(a=0,b=1)
 rs=cor(x,y)^2
 legend("topleft", paste("R squared = ", round(rs, digits=3), sep=""), lwd=1, col="black")
-
-
+```
 Plot #5 - Scatter plots with a large number of data points can be misleading … regenerate this figure as a density scatter plot.
+```
 colors = colorRampPalette(c("white", "blue", "#007FFF", "cyan","#7FFF7F", "yellow", "#FF7F00", "red", "#7F0000"))
 smoothScatter(x=log2(x+min_nonzero), y=log2(y+min_nonzero), xlab="FPKM (IS20351_DS, Replicate 1)", ylab="FPKM (IS20351_DS, Replicate 2)", main="Comparison of expression values for a pair of replicates", colramp=colors, nbin=200)
-
-
+```
 Compare the correlation ‘distance’ between all replicates Do we see the expected pattern for all libraries (i.e. replicates most similar, then DS vs. WW)? 
-Calculate the FPKM sum for all 6 libraries.
-
+Calculate the FPKM sum for all libraries.
+```
 gene_expression[,"sum"]=apply(gene_expression[,data_columns], 1, sum)
 Identify the genes with a grand sum FPKM of at least 5 - we will filter out the genes with very low expression across the board
 i = which(gene_expression[,"sum"] > 5)
@@ -245,34 +273,34 @@ r
 ## IS20351_WW_1_1      0.8317814      0.8210495
 ## IS20351_WW_2_1      1.0000000      0.9825595
 ## IS20351_WW_3_1      0.9825595      1.0000000
-
+```
 Plot #8 - Convert correlation to ‘distance’, and use ‘multi-dimensional scaling’ to display the relative differences between libraries.
 This step calculates 2-dimensional coordinates to plot points for each library Libraries with similar expression patterns (highly correlated to each other) 
 should group together. What pattern do we expect to see, given the types of libraries we have (technical replicates, biologal replicates, DS/WW)?
-
+```
 d=1-r
 mds=cmdscale(d, k=2, eig=TRUE)
 par(mfrow=c(1,1))
 plot(mds$points, type="n", xlab="", ylab="", main="MDS distance plot (all non-zero genes) for all libraries", xlim=c(-0.15,0.15), ylim=c(-0.15,0.15))
 points(mds$points[,1], mds$points[,2], col="grey", cex=2, pch=16)
 text(mds$points[,1], mds$points[,2], short_names, col=data_colors)
-
-
-#Calculate the differential expression results including significance
+```
+Calculate the differential expression results including significance
+```
 results_genes = stattest(bg_filt, feature="gene", covariate="group", getFC=TRUE, meas="FPKM")
 results_genes = merge(results_genes,bg_gene_names,by.x=c("id"),by.y=c("gene_id"))
-
+```
 Plot #9 - View the distribution of differential expression values as a histogram Display only those that are significant according to Ballgown.
-
+```
 sig=which(results_genes$pval<0.05)
 results_genes[,"de"] = log2(results_genes[,"fc"])
 hist(results_genes[sig,"de"], breaks=50, col="seagreen", xlab="log2(Fold change) Sen_DS vs Sen_WW", main="Distribution of differential expression values")
 abline(v=-2, col="black", lwd=2, lty=2)
 abline(v=2, col="black", lwd=2, lty=2)
 legend("topleft", "Fold-change > 4", lwd=2, lty=2)
-
+```
 Plot #10 - Display the grand expression values from UHR and HBR and mark those that are significantly differentially expressed.
-
+```
 gene_expression[,"Sen_DS"]=apply(gene_expression[,c(1:3)], 1, mean)
 gene_expression[,"Sen_WW"]=apply(gene_expression[,c(3:6)], 1, mean)
 x=log2(gene_expression[,"Sen_DS"]+min_nonzero)
@@ -283,9 +311,9 @@ xsig=x[sig]
 ysig=y[sig]
 points(x=xsig, y=ysig, col="magenta", pch=16, cex=0.5)
 legend("topleft", "Significant", col="magenta", pch=16)
-
-#Write a simple table of differentially expressed transcripts to an output file Each should be significant with a log2 fold-change >= 2
-
+```
+Write a simple table of differentially expressed transcripts to an output file Each should be significant with a log2 fold-change >= 2
+```
 sigpi = which(results_genes[,"pval"]<0.05)
 sigp = results_genes[sigpi,]
 sigde = which(abs(sigp[,"de"]) >= 2)
@@ -294,9 +322,16 @@ Order the output by or p-value and then break ties using fold-change
 o = order(sig_tn_de[,"qval"], -abs(sig_tn_de[,"de"]), decreasing=FALSE)
 output = sig_tn_de[o,c("gene_name","id","fc","pval","qval","de")]
 write.table(output, file="SigDE.txt", sep="\t", row.names=FALSE, quote=FALSE)
-
-#View selected columns of the first 25 lines of output
+csv <- read.table("SigDE.txt", header = TRUE, sep = "\t")
+csv
+```
+View selected columns of the first 25 lines of output
+```
 output[1:10,c(1,4,5)]
+```
+## Create a text file to intersect with a file containing the Ensembl IDs to obtain an annotated file if some annotations are missing. Skip this step if annotations are present in the previous step.
+```
+bedtools intersect -a SigDE.txt -b id_file.txt > newly_annotated_file.txt
 ```
 ---
 # SALMON
