@@ -1,4 +1,4 @@
-# Rainbow Trout 0dph RRBS Analysis via methylKit"
+# Rainbow Trout 0dph RRBS Analysis via methylKit
 # Updated: 15.12.2021
 
 ```{r setup, include=FALSE}
