@@ -326,25 +326,25 @@ Number of bases per comparison:
 - Supplemented-Inadequate: 555361
 
 ## PCA analysis
+Source: [DML Analysis Part 43 by Dr. Yaamini Venkataraman](https://yaaminiv.github.io/DML-Analysis-Part43/)
 ```{r, message=FALSE, echo=FALSE, results=FALSE}
-#Source: https://yaaminiv.github.io/DML-Analysis-Part43/
+
 plotColors <- rev(RColorBrewer::brewer.pal(5, "GnBu"))
 plotCustomization <- data.frame("Group" = c("0"))
 
 #Supplemented vs Control
 allDataPCA.supp <- PCASamples(meth.supp, obj.return = TRUE)
 summary(allDataPCA.supp)
-#Look at summary statistics. The first PC explains 15.14% of variation, the second PC explains 7.75% of variation.
+#Look at summary statistics. The first PC explains 15.14% of variation, the second PC explains 7.75% of variation. This was repeated for the other comparisons.
 ```
 ![PCA Plot Control-Choline+ (methylKit)](https://user-images.githubusercontent.com/66127229/146226862-04b61b62-7b3d-4f9d-988b-b11bbffe33fb.jpeg)
   
-The PCA plots from methylKit weren't ideal, but the user above (Dr. Yaamini Venkataraman) has a great work around using the return object feature in the PCASamples to extract the data for our own customizable PCA plots.
+The PCA plots from methylKit weren't ideal, but Dr. Yaamini Venkataraman has a great work around using the return object feature in the PCASamples to extract the data for our own customizable PCA plots.
 ```{r, message=FALSE, echo=FALSE}
 fig.allDataPCA.supp <- ordiplot(allDataPCA.supp, choices=c(1,2), type = "none", display = "sites", 
                                 xlab = "", ylab = "", cex = 0.5, xaxt = "n", yaxt = "n") #Save NMDS as a new object)
 points(fig.allDataPCA.supp, col = c(rep(plotColors[2], times = 5), rep(plotColors[3], times = 5)), 
        pch = c(rep(16, times = 5), rep(17, times = 5)),"sites", cex = 2)
-#Add each sample. Darker samples are control samples with lighter samples being samples from supplemented choline diet.
 box(col = "white")
 box(col = "white")
 box(col = "white")
@@ -366,14 +366,12 @@ legend("topright", legend = c("Control","Choline +"), pch = c(16,17), col = c(pl
 #Control vs Inadequate
 allDataPCA.inadeq <- PCASamples(meth.inadeq, obj.return = TRUE)
 summary(allDataPCA.inadeq)
-#Look at summary statistics. The first PC explains 18.37% of variation, the second PC explains 9.27% of variation.
 ```
 ```{r, message=FALSE, echo=FALSE}
 fig.allDataPCA.inadeq <- ordiplot(allDataPCA.inadeq, choices=c(1,2), type = "none", display = "sites", 
                                 xlab = "", ylab = "", cex = 0.5, xaxt = "n", yaxt = "n") #Save NMDS as a new object)
 points(fig.allDataPCA.inadeq, col = c(rep(plotColors[2], times = 5), rep(plotColors[4], times = 5)), 
        pch = c(rep(16, times = 5), rep(18, times = 5)),"sites", cex = 2)
-#Add each sample. Darker samples are choline deficient samples with lighter samples are control samples.
 box(col = "white")
 box(col = "white")
 box(col = "white")
@@ -391,7 +389,8 @@ axis(side = 2, labels = TRUE, col = "grey80", cex.axis = 0.75)
 mtext(side = 2, text = "PC 2 (9.27%)", line = 2)
 legend("topright", legend = c("Control","Choline -"), pch = c(16,18), col = c(plotColors[2],plotColors[4]))
 ```
-![PCA Plot Choline+-Choline-](https://user-images.githubusercontent.com/66127229/146226860-e2ff223c-e599-4051-9777-c478d6c1a124.jpeg)
+
+![PCA Plot Control-Choline-](https://user-images.githubusercontent.com/66127229/146226861-fbfa12f9-9bc1-462e-b6f3-85eaa1cbd37f.jpeg)
 ```{r, message=FALSE, echo=FALSE, results=FALSE}
 #Supplemented vs Inadequate
 allDataPCA.supp.inadeq <- PCASamples(meth.supp.inadeq, obj.return = TRUE)
@@ -403,7 +402,6 @@ fig.allDataPCA.supp.inadeq <- ordiplot(allDataPCA.supp.inadeq, choices=c(1,2), t
                                 xlab = "", ylab = "", cex = 0.5, xaxt = "n", yaxt = "n") #Save NMDS as a new object)
 points(fig.allDataPCA.supp.inadeq, col = c(rep(plotColors[4], times = 5), rep(plotColors[3], times = 5)), 
        pch = c(rep(18, times = 5), rep(17, times = 5)),"sites", cex = 2)
-#Add each sample. Darker samples are choline deficient samples with lighter samples are control samples.
 box(col = "white")
 box(col = "white")
 box(col = "white")
@@ -421,18 +419,18 @@ axis(side = 2, labels = TRUE, col = "grey80", cex.axis = 0.75)
 mtext(side = 2, text = "PC 2 (6.05%)", line = 2)
 legend("topright", legend = c("Choline +","Choline -"), pch = c(18,17), col = c(plotColors[4],plotColors[3]))
 ```
-![PCA Plot Control-Choline-](https://user-images.githubusercontent.com/66127229/146226861-fbfa12f9-9bc1-462e-b6f3-85eaa1cbd37f.jpeg)
+![PCA Plot Choline+-Choline-](https://user-images.githubusercontent.com/66127229/146226860-e2ff223c-e599-4051-9777-c478d6c1a124.jpeg)
   
 ## Get differentially methylated CpGs.
 ```{r, message=FALSE, warning=FALSE, results=FALSE}
 #Supplemented vs Control
 myDiff.supp <- calculateDiffMeth(meth.supp)
+
 #Control vs Inadequate
 myDiff.inadeq <- calculateDiffMeth(meth.inadeq)
+
 #Supplemented vs Inadequate
 myDiff.supp.inadeq <- calculateDiffMeth(meth.supp.inadeq)
-
-# myDiff <- calculateDiffMeth(pooled.meth, num.cores = 4)
 ```
   
 ## Get hyper- and hypo-methylated CpGs.
@@ -441,75 +439,89 @@ myDiff.supp.inadeq <- calculateDiffMeth(meth.supp.inadeq)
 #Supplemented vs Control
 myDiff25p.hyper.supp <- getMethylDiff(myDiff.supp,difference=20,qvalue=0.01,type="hyper")
 myDiff25p.hyper.supp
+
 #Control vs Inadequate
 myDiff25p.hyper.inadeq <- getMethylDiff(myDiff.inadeq,difference=20,qvalue=0.01,type="hyper")
 myDiff25p.hyper.inadeq
+
 #Supplemented vs Inadequate
 myDiff25p.hyper.supp.inadeq <- getMethylDiff(myDiff.supp.inadeq,difference=20,qvalue=0.05,type="hyper")
 myDiff25p.hyper.supp.inadeq
 ```
-  
-Number of DMBs in Supplemented Comparison (q<0.05): 699
-Number of DMBs in Supplemented Comparison (q<0.01): 286
+Supplemented Diet vs Control Diet:
+- Number of DMBs (q<0.05): 699
+- Number of DMBs (q<0.01): 286
 
-Number of DMBs in Inadequate Comparison (q<0.05): 4993
-Number of DMBs in Inadequate Comparison (q<0.01): 3433
+Control Diet vs Inadequate Diet:
+- Number of DMBs (q<0.05): 4993
+- Number of DMBs (q<0.01): 3433
 
-Number of DMBs in Supplemented vs Inadequate (q<0.05): 4911
-Number of DMBs in Supplemented vs Inadequate (q<0.01): 3545
+Supplemented Diet vs Inadequate Diet:
+- Number of DMBs (q<0.05): 4911
+- Number of DMBs (q<0.01): 3545
   
 ### Get hypomethylated CpGs
 ```{r, message=FALSE, warning=FALSE, results=FALSE}
 #Supplemented vs Control
 myDiff25p.hypo.supp <- getMethylDiff(myDiff.supp,difference=20,qvalue=0.01,type="hypo")
 myDiff25p.hypo.supp
+
 #Control vs Inadequate
 myDiff25p.hypo.inadeq <- getMethylDiff(myDiff.inadeq,difference=20,qvalue=0.01,type="hypo")
 myDiff25p.hypo.inadeq
+
 #Supplemented vs Inadequate
 myDiff25p.hypo.supp.inadeq <- getMethylDiff(myDiff.supp.inadeq,difference=20,qvalue=0.05,type="hypo")
 myDiff25p.hypo.supp.inadeq
 ```
-  
-Number of DMBs in Supplemented Comparison (q<0.05): 637
-Number of DMBs in Supplemented Comparison (q<0.01): 266
+Supplemented Diet vs Control Diet:
+- Number of DMBs (q<0.05): 637
+- Number of DMBs (q<0.01): 266
 
-Number of DMBs in Inadequate Comparison (q<0.05): 3830
-Number of DMBs in Inadequate Comparison (q<0.01): 2721
+Control Diet vs Inadequate Diet:
+- Number of DMBs (q<0.05): 3830
+- Number of DMBs (q<0.01): 2721
 
-Number of DMBs in Supplemented vs Inadequate (q<0.05): 6388
-Number of DMBs in Supplemented vs Inadequate (q<0.01): 4478
+Supplemented Diet vs Inadequate Diet:
+- Number of DMBs (q<0.05): 6388
+- Number of DMBs (q<0.01): 4478
   
 ### Get all Differentially Methylated Bases (DMBs)
 ```{r, message=FALSE, warning=FALSE, results=FALSE}
 #Supplemented vs Control
 myDiff25p.supp <- getMethylDiff(myDiff.supp,difference=20,qvalue=0.01)
 myDiff25p.supp
+
 #Control vs Inadequate
 myDiff25p.inadeq <- getMethylDiff(myDiff.inadeq,difference=20,qvalue=0.01)
 myDiff25p.inadeq
+
 #Supplemented vs Inadequate
 myDiff25p.supp.inadeq <- getMethylDiff(myDiff.supp.inadeq,difference=20,qvalue=0.05)
 myDiff25p.supp.inadeq
 ```
-  
-Number of DMBs in Supplemented Comparison (q<0.05): 1336
-Number of DMBs in Supplemented Comparison (q<0.01): 552
+Supplemented Diet vs Control Diet:
+- Number of DMBs (q<0.05): 1336
+- Number of DMBs (q<0.01): 552
 
-Number of DMBs in Inadequate Comparison (q<0.05): 8823
-Number of DMBs in Inadequate Comparison (q<0.01): 6154
+Control Diet vs Inadequate Diet:
+- Number of DMBs (q<0.05): 8823
+- Number of DMBs (q<0.01): 6154
 
-Number of DMBs in Supplemented vs Inadequate (q<0.05): 11299
-Number of DMBs in Supplemented vs Inadequate (q<0.01): 8023
+Supplemented Diet vs Inadequate Diet:
+- Number of DMBs (q<0.05): 11299
+- Number of DMBs (q<0.01): 8023
   
 ### Get data for all analyzed CpG sites
 ```{r, message=FALSE, warning=FALSE, results=FALSE}
 #Supplemented vs Control 
 myDiffall.supp <- getMethylDiff(myDiff.supp,difference=0,qvalue=1) 
 myDiffall.supp
+
 #Control vs Inadequate
 myDiffall.inadeq <- getMethylDiff(myDiff.inadeq,difference=0,qvalue=1) 
 myDiffall.inadeq
+
 #Supplemented vs Inadequate 
 myDiffall.supp.inadeq <- getMethylDiff(myDiff.supp.inadeq,difference=0,qvalue=1) 
 myDiffall.supp.inadeq
