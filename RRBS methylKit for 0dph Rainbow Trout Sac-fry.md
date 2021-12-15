@@ -455,8 +455,8 @@ Number of DMBs in Supplemented Comparison (q<0.01): 286
 Number of DMBs in Inadequate Comparison (q<0.05): 4993
 Number of DMBs in Inadequate Comparison (q<0.01): 3433
 
-Number of DMBs in Supplemented vs Inadequate (q<0.05): 
-Number of DMBs in Supplemented vs Inadequate (q<0.01): 
+Number of DMBs in Supplemented vs Inadequate (q<0.05): 4911
+Number of DMBs in Supplemented vs Inadequate (q<0.01): 3545
   
 ### Get hypomethylated CpGs
 ```{r, message=FALSE, warning=FALSE, results=FALSE}
@@ -477,8 +477,8 @@ Number of DMBs in Supplemented Comparison (q<0.01): 266
 Number of DMBs in Inadequate Comparison (q<0.05): 3830
 Number of DMBs in Inadequate Comparison (q<0.01): 2721
 
-Number of DMBs in Supplemented vs Inadequate (q<0.05): 
-Number of DMBs in Supplemented vs Inadequate (q<0.01): 
+Number of DMBs in Supplemented vs Inadequate (q<0.05): 6388
+Number of DMBs in Supplemented vs Inadequate (q<0.01): 4478
   
 ### Get all Differentially Methylated Bases (DMBs)
 ```{r, message=FALSE, warning=FALSE, results=FALSE}
@@ -499,8 +499,8 @@ Number of DMBs in Supplemented Comparison (q<0.01): 552
 Number of DMBs in Inadequate Comparison (q<0.05): 8823
 Number of DMBs in Inadequate Comparison (q<0.01): 6154
 
-Number of DMBs in Supplemented vs Inadequate (q<0.05): 
-Number of DMBs in Supplemented vs Inadequate (q<0.01): 
+Number of DMBs in Supplemented vs Inadequate (q<0.05): 11299
+Number of DMBs in Supplemented vs Inadequate (q<0.01): 8023
   
 ### Get data for all analyzed CpG sites
 ```{r, message=FALSE, warning=FALSE, results=FALSE}
