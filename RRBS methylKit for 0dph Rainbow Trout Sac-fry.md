@@ -325,7 +325,7 @@ Number of bases per comparison:
 - Control-Inadequate: 405470
 - Supplemented-Inadequate: 555361
 
-# PCA analysis
+## PCA analysis
 ```{r, message=FALSE, echo=FALSE, results=FALSE}
 #Source: https://yaaminiv.github.io/DML-Analysis-Part43/
 plotColors <- rev(RColorBrewer::brewer.pal(5, "GnBu"))
@@ -336,6 +336,7 @@ allDataPCA.supp <- PCASamples(meth.supp, obj.return = TRUE)
 summary(allDataPCA.supp)
 #Look at summary statistics. The first PC explains 15.14% of variation, the second PC explains 7.75% of variation.
 ```
+
 The PCA plots from methylKit weren't ideal, but the user above (Dr. Yaamini Venkataraman) has a great work around using the return object feature in the PCASamples to extract the data for our own customizable PCA plots.
 ```{r, message=FALSE, echo=FALSE}
 fig.allDataPCA.supp <- ordiplot(allDataPCA.supp, choices=c(1,2), type = "none", display = "sites", 
