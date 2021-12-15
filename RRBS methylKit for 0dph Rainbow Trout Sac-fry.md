@@ -336,7 +336,8 @@ allDataPCA.supp <- PCASamples(meth.supp, obj.return = TRUE)
 summary(allDataPCA.supp)
 #Look at summary statistics. The first PC explains 15.14% of variation, the second PC explains 7.75% of variation.
 ```
-
+![PCA Plot Control-Choline+ (methylKit)](https://user-images.githubusercontent.com/66127229/146226862-04b61b62-7b3d-4f9d-988b-b11bbffe33fb.jpeg)
+  
 The PCA plots from methylKit weren't ideal, but the user above (Dr. Yaamini Venkataraman) has a great work around using the return object feature in the PCASamples to extract the data for our own customizable PCA plots.
 ```{r, message=FALSE, echo=FALSE}
 fig.allDataPCA.supp <- ordiplot(allDataPCA.supp, choices=c(1,2), type = "none", display = "sites", 
@@ -360,6 +361,7 @@ axis(side = 2, labels = TRUE, col = "grey80", cex.axis = 0.75)
 mtext(side = 2, text = "PC 2 (7.75%)", line = 2)
 legend("topright", legend = c("Control","Choline +"), pch = c(16,17), col = c(plotColors[2],plotColors[3]))
 ```
+![PCA Plot Control-Choline+](https://user-images.githubusercontent.com/66127229/146226863-d229dae3-e6c6-4058-aaa2-906221c80681.jpeg)
 ```{r, message=FALSE, echo=FALSE, results=FALSE}
 #Control vs Inadequate
 allDataPCA.inadeq <- PCASamples(meth.inadeq, obj.return = TRUE)
@@ -389,6 +391,7 @@ axis(side = 2, labels = TRUE, col = "grey80", cex.axis = 0.75)
 mtext(side = 2, text = "PC 2 (9.27%)", line = 2)
 legend("topright", legend = c("Control","Choline -"), pch = c(16,18), col = c(plotColors[2],plotColors[4]))
 ```
+![PCA Plot Choline+-Choline-](https://user-images.githubusercontent.com/66127229/146226860-e2ff223c-e599-4051-9777-c478d6c1a124.jpeg)
 ```{r, message=FALSE, echo=FALSE, results=FALSE}
 #Supplemented vs Inadequate
 allDataPCA.supp.inadeq <- PCASamples(meth.supp.inadeq, obj.return = TRUE)
@@ -418,6 +421,7 @@ axis(side = 2, labels = TRUE, col = "grey80", cex.axis = 0.75)
 mtext(side = 2, text = "PC 2 (6.05%)", line = 2)
 legend("topright", legend = c("Choline +","Choline -"), pch = c(18,17), col = c(plotColors[4],plotColors[3]))
 ```
+![PCA Plot Control-Choline-](https://user-images.githubusercontent.com/66127229/146226861-fbfa12f9-9bc1-462e-b6f3-85eaa1cbd37f.jpeg)
   
 ## Get differentially methylated CpGs.
 ```{r, message=FALSE, warning=FALSE, results=FALSE}
